@@ -1,6 +1,5 @@
 click
-Werkzeug<3.0.0
-Flask<3.0.0
+Flask
 markdown2
-emoji>=2.0.0,<3.0
+emoji
 frozen-flask
