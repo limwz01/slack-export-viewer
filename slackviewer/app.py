@@ -28,15 +28,29 @@ def channel_name(name):
                                  no_sidebar=app.no_sidebar,
                                  no_external_references=app.no_external_references)
 
+
 def send_file(name, attachment):
     try_path = os.path.join(app.data.path, name, "attachments", attachment)
     if os.path.exists(try_path):
         return flask.send_file(try_path)
-    return flask.send_file(os.path.join(app.data.path, "attachments", attachment))
+    try_path = os.path.join(app.data.path, "__uploads", attachment)
+    if os.path.exists(try_path):
+        return flask.send_file(try_path)
+    dirname = os.path.dirname(try_path)
+    target = os.path.basename(try_path)
+    for fn in os.listdir(dirname):
+        if fn.lower() == target:
+            return flask.send_file(os.path.join(dirname, fn))
+    
 
 @app.route("/channel/<name>/attachments/<attachment>")
 def channel_name_attachment(name, attachment):
     return send_file(name, attachment)
+
+
+@app.route("/channel/<name>/attachments/<path>/<attachment>")
+def channel_name_path_attachment(name, path, attachment):
+    return send_file(name, os.path.join(path.split("-")[1], attachment))
 
 
 @app.route("/group/<name>/")
@@ -62,6 +76,11 @@ def group_name_attachment(name, attachment):
     return send_file(name, attachment)
 
 
+@app.route("/group/<name>/attachments/<path>/<attachment>")
+def group_name_path_attachment(name, path, attachment):
+    return send_file(name, os.path.join(path.split("-")[1], attachment))
+
+
 @app.route("/dm/<id>/")
 def dm_id(id):
     messages = app.data.dms[id]
@@ -83,6 +102,11 @@ def dm_id(id):
 @app.route("/dm/<name>/attachments/<attachment>")
 def dm_name_attachment(name, attachment):
     return send_file(name, attachment)
+
+
+@app.route("/dm/<name>/attachments/<path>/<attachment>")
+def dm_name_path_attachment(name, path, attachment):
+    return send_file(name, os.path.join(path.split("-")[1], attachment))
 
 
 @app.route("/mpim/<name>/")
@@ -108,6 +132,11 @@ def mpim_name_attachment(name, attachment):
     return send_file(name, attachment)
 
 
+@app.route("/mpim/<name>/attachments/<path>/<attachment>")
+def mpim_name_path_attachment(name, path, attachment):
+    return send_file(name, os.path.join(path.split("-")[1], attachment))
+
+
 @app.route("/")
 def index():
     channels = list(app.data.channels.keys())
@@ -116,14 +145,14 @@ def index():
     mpims = list(app.data.mpims.keys())
     if channels:
         if "general" in channels:
-            return channel_name("general")
+            return flask.redirect(flask.url_for(channel_name.__name__, name="general"))
         else:
-            return channel_name(channels[0])
+            return flask.redirect(flask.url_for(channel_name.__name__, name=channels[0]))
     elif groups:
-        return group_name(groups[0])
+        return flask.redirect(flask.url_for(group_name.__name__, name=groups[0]))
     elif dms:
-        return dm_id(dms[0])
+        return flask.redirect(flask.url_for(dm_id.__name__, id=dms[0]))
     elif mpims:
-        return mpim_name(mpims[0])
+        return flask.redirect(flask.url_for(mpim_name.__name__, name=mpims[0]))
     else:
         return "No content was found in your export that we could render."
