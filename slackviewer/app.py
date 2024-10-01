@@ -9,14 +9,15 @@ app = flask.Flask(
     static_folder="static"
 )
 
+app.data = app.app_ctx_globals_class()
 
 @app.route("/channel/<name>/")
 def channel_name(name):
-    messages = flask._app_ctx_stack.channels[name]
-    channels = list(flask._app_ctx_stack.channels.keys())
-    groups = list(flask._app_ctx_stack.groups.keys()) if flask._app_ctx_stack.groups else {}
-    dm_users = list(flask._app_ctx_stack.dm_users)
-    mpim_users = list(flask._app_ctx_stack.mpim_users)
+    messages = app.data.channels[name]
+    channels = list(app.data.channels.keys())
+    groups = list(app.data.groups.keys()) if app.data.groups else {}
+    dm_users = list(app.data.dm_users)
+    mpim_users = list(app.data.mpim_users)
 
     return flask.render_template("viewer.html", messages=messages,
                                  name=name.format(name=name),
@@ -28,10 +29,10 @@ def channel_name(name):
                                  no_external_references=app.no_external_references)
 
 def send_file(name, attachment):
-    try_path = os.path.join(flask._app_ctx_stack.path, name, "attachments", attachment)
+    try_path = os.path.join(app.data.path, name, "attachments", attachment)
     if os.path.exists(try_path):
         return flask.send_file(try_path)
-    return flask.send_file(os.path.join(flask._app_ctx_stack.path, "attachments", attachment))
+    return flask.send_file(os.path.join(app.data.path, "attachments", attachment))
 
 @app.route("/channel/<name>/attachments/<attachment>")
 def channel_name_attachment(name, attachment):
@@ -40,11 +41,11 @@ def channel_name_attachment(name, attachment):
 
 @app.route("/group/<name>/")
 def group_name(name):
-    messages = flask._app_ctx_stack.groups[name]
-    channels = list(flask._app_ctx_stack.channels.keys())
-    groups = list(flask._app_ctx_stack.groups.keys())
-    dm_users = list(flask._app_ctx_stack.dm_users)
-    mpim_users = list(flask._app_ctx_stack.mpim_users)
+    messages = app.data.groups[name]
+    channels = list(app.data.channels.keys())
+    groups = list(app.data.groups.keys())
+    dm_users = list(app.data.dm_users)
+    mpim_users = list(app.data.mpim_users)
 
     return flask.render_template("viewer.html", messages=messages,
                                  name=name.format(name=name),
@@ -63,11 +64,11 @@ def group_name_attachment(name, attachment):
 
 @app.route("/dm/<id>/")
 def dm_id(id):
-    messages = flask._app_ctx_stack.dms[id]
-    channels = list(flask._app_ctx_stack.channels.keys())
-    groups = list(flask._app_ctx_stack.groups.keys())
-    dm_users = list(flask._app_ctx_stack.dm_users)
-    mpim_users = list(flask._app_ctx_stack.mpim_users)
+    messages = app.data.dms[id]
+    channels = list(app.data.channels.keys())
+    groups = list(app.data.groups.keys())
+    dm_users = list(app.data.dm_users)
+    mpim_users = list(app.data.mpim_users)
 
     return flask.render_template("viewer.html", messages=messages,
                                  id=id.format(id=id),
@@ -86,11 +87,11 @@ def dm_name_attachment(name, attachment):
 
 @app.route("/mpim/<name>/")
 def mpim_name(name):
-    messages = flask._app_ctx_stack.mpims.get(name, list())
-    channels = list(flask._app_ctx_stack.channels.keys())
-    groups = list(flask._app_ctx_stack.groups.keys())
-    dm_users = list(flask._app_ctx_stack.dm_users)
-    mpim_users = list(flask._app_ctx_stack.mpim_users)
+    messages = app.data.mpims.get(name, list())
+    channels = list(app.data.channels.keys())
+    groups = list(app.data.groups.keys())
+    dm_users = list(app.data.dm_users)
+    mpim_users = list(app.data.mpim_users)
 
     return flask.render_template("viewer.html", messages=messages,
                                  name=name.format(name=name),
@@ -109,10 +110,10 @@ def mpim_name_attachment(name, attachment):
 
 @app.route("/")
 def index():
-    channels = list(flask._app_ctx_stack.channels.keys())
-    groups = list(flask._app_ctx_stack.groups.keys())
-    dms = list(flask._app_ctx_stack.dms.keys())
-    mpims = list(flask._app_ctx_stack.mpims.keys())
+    channels = list(app.data.channels.keys())
+    groups = list(app.data.groups.keys())
+    dms = list(app.data.dms.keys())
+    mpims = list(app.data.mpims.keys())
     if channels:
         if "general" in channels:
             return channel_name("general")
